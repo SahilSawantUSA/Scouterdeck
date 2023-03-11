@@ -1,11 +1,27 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
 
 function createWindow() {
+   const mainWindow = new BrowserWindow({
+      width: 1920,
+      height: 320,
+      x: 0,
+      y: 720,
+      webPreferences:{
+         nodeIntegration: true,
+         contextIsolation: false,
+         enableRemoteModule: true
+      }
+   });
+   mainWindow.loadFile('index.html');
+
+
    const tablet1 = new BrowserWindow({
-      width: 800,
-      height: 600,
+      width: 640,
+      height: 320,
+      x: 0,
+      y: 0,
       webPreferences:{
          nodeIntegration: true,
          contextIsolation: false
@@ -22,8 +38,10 @@ function createWindow() {
 
 
    const tablet2 = new BrowserWindow({
-      width: 800,
-      height: 600,
+      width: 640,
+      height: 320,
+      x: 640,
+      y: 0,
       webPreferences:{
          nodeIntegration: true,
          contextIsolation: false
@@ -40,8 +58,10 @@ function createWindow() {
 
 
    const tablet3 = new BrowserWindow({
-      width: 800,
-      height: 600,
+      width: 640,
+      height: 320,
+      x: 1280,
+      y: 0,
       webPreferences:{
          nodeIntegration: true,
          contextIsolation: false
@@ -58,8 +78,10 @@ function createWindow() {
 
 
    const tablet4 = new BrowserWindow({
-      width: 800,
-      height: 600,
+      width: 640,
+      height: 320,
+      x: 0,
+      y: 360,
       webPreferences:{
          nodeIntegration: true,
          contextIsolation: false
@@ -76,8 +98,10 @@ function createWindow() {
 
 
    const tablet5 = new BrowserWindow({
-      width: 800,
-      height: 600,
+      width: 640,
+      height: 320,
+      x: 640,
+      y: 360,
       webPreferences:{
          nodeIntegration: true,
          contextIsolation: false
@@ -94,8 +118,10 @@ function createWindow() {
 
 
    const tablet6 = new BrowserWindow({
-      width: 800,
-      height: 600,
+      width: 640,
+      height: 320,
+      x: 1280,
+      y: 360,
       webPreferences:{
          nodeIntegration: true,
          contextIsolation: false
@@ -109,6 +135,15 @@ function createWindow() {
       }
    });
    tablet6.loadFile('tablet6.html');
+
+   ipcMain.on('key', (event, arg) => {  
+      tablet1.webContents.send('key', arg);
+      tablet2.webContents.send('key', arg);
+      tablet3.webContents.send('key', arg);
+      tablet4.webContents.send('key', arg);
+      tablet5.webContents.send('key', arg);
+      tablet6.webContents.send('key', arg);
+   });
 }
 
 app.whenReady().then(() => {

@@ -1,60 +1,97 @@
-const SERVICE_UUID3 = "974f9e8a-124d-43a8-8896-9a5ba15526be";
-const CHARACTERISTIC_UUID3 = "03029100-6d76-46c9-b233-7614d893a6ac";
+const { ipcRenderer } = require('electron');
 
-const statusLabel3 = document.getElementById("statusLabel3");
-const connectButton3 = document.getElementById("connectButton3");
+const SERVICE_UUID = "974f9e8a-124d-43a8-8896-9a5ba15526be";
+const CHARACTERISTIC_UUID = "03029100-6d76-46c9-b233-7614d893a6ac";
 
-let lastValue3 = "";
+const statusLabel = document.getElementById("statusLabel");
+const connectButton = document.getElementById("connectButton");
 
-connectButton3.addEventListener("click", connect3);
+let matchKey = "";
+let lastValue = "";
+let convert = false;
 
-function displayStatus3(status) {
-  statusLabel3.innerHTML = status;
+var mysql = require("mysql");
+
+var con = mysql.createConnection({
+  host: "localhost",
+  user: "Scouter",
+  password: "Data2Banner",
+});
+
+ipcRenderer.on('key', (event, arg) => {
+  matchKey = arg;
+});
+
+connectButton.addEventListener("click", connect);
+
+function displayStatus(status) {
+  statusLabel.innerHTML = status;
 }
 
-async function connect3() {
-  displayStatus3("Searching devices for service " + SERVICE_UUID3);
+async function connect() {
+  displayStatus("Searching devices for service " + SERVICE_UUID);
 
   try {
     const device = await navigator.bluetooth.requestDevice({
       filters: [{ name: "COMET3" }],
       optionalServices: ["974f9e8a-124d-43a8-8896-9a5ba15526be"],
     });
-    displayStatus3("Found device " + device.name + " with service");
+    displayStatus("Found device " + device.name + " with service");
 
     const server = await device.gatt.connect();
-    displayStatus3("Connected to GATT server");
+    displayStatus("Connected to GATT server");
 
-    const service = await server.getPrimaryService(SERVICE_UUID3);
-    displayStatus3("Connected to service " + SERVICE_UUID3);
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    displayStatus("Connected to service " + SERVICE_UUID);
 
     const characteristic = await service.getCharacteristic(
-      CHARACTERISTIC_UUID3
+      CHARACTERISTIC_UUID
     );
     setInterval(async () => {
       try {
         let readData = await characteristic.readValue();
 
-        let value = "";
+        let value = "'" + matchKey;
         if (readData.byteLength > 0) {
           for (let i = 0; i < readData.byteLength; i++) {
-            console.log("Tablet 2: " + readData.getUint8(i));
             if (readData.getUint8(i) == 255) {
-              value = value + ",";
+              value = value + "','";
+            } else if (readData.getUint8(i) == 253){
+              convert = true;
+            } else if (readData.getUint8(i) == 254){
+              convert = false;
             } else {
-              value = value + readData.getUint8(i);
+              if (convert == true) {
+                value = value + String.fromCharCode(readData.getUint8(i));
+              } else {
+                value = value + readData.getUint8(i);
+              }
             }
           }
-          if (value != lastValue3) {
-            lastValue3 = value;
-            displayStatus3(value);
+          value = value + "'";
+          if (value != lastValue) {
+            console.log("Tablet 3: " + value);
+            lastValue = value;
+            displayStatus(value);
+
+            con.connect(function (err) {
+              if (err) throw err;
+              console.log("Connected!");
+              var sql = `INSERT INTO match_data (matchNumber, tablet, teamnumber, scouter, timestamp, gamepiecepreload, automove, autogamepiecesaqquired, autoplacetr, autoplacemr, autoplacebr, autochargestation, automidline, telegamepiecesaqquired, teleplacetr, teleplacemr, teleplacebr, chargestation, playeddefense, wasdefended) VALUES (${value})`;
+              con.query(sql, function (err, result) {
+                if (err) throw err;
+                console.log("Tablet 3: Data inserted to database");
+              });
+            });
+          } else {
+            console.log("Tablet 3: Repeat");
           }
         }
       } catch (error) {
-        displayStatus3("Error: " + error);
+        displayStatus("Error: " + error);
       }
     }, 10000);
   } catch (error) {
-    displayStatus3("Error: " + error);
+    displayStatus("Error: " + error);
   }
 }

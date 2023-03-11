@@ -1,60 +1,90 @@
-const SERVICE_UUID5 = "974f9e8a-124d-43a8-8896-9a5ba15526be";
-const CHARACTERISTIC_UUID5 = "03029100-6d76-46c9-b233-7614d893a6ac";
+const SERVICE_UUID = "974f9e8a-124d-43a8-8896-9a5ba15526be";
+const CHARACTERISTIC_UUID = "03029100-6d76-46c9-b233-7614d893a6ac";
 
-const statusLabel5 = document.getElementById("statusLabel5");
-const connectButton5 = document.getElementById("connectButton5");
+const statusLabel = document.getElementById("statusLabel1");
+const connectButton = document.getElementById("connectButton1");
 
-let lastValue5 = "";
+let lastValue = "";
+let convert = false;
 
-connectButton5.addEventListener("click", connect5);
+var mysql = require("mysql");
 
-function displayStatus5(status) {
-  statusLabel5.innerHTML = status;
+var con = mysql.createConnection({
+  host: "localhost",
+  user: "Scouter",
+  password: "Data2Banner",
+});
+
+connectButton.addEventListener("click", connect);
+
+function displayStatus(status) {
+  statusLabel.innerHTML = status;
 }
 
-async function connect5() {
-  displayStatus5("Searching devices for service " + SERVICE_UUID5);
+async function connect() {
+  displayStatus("Searching devices for service " + SERVICE_UUID);
 
   try {
     const device = await navigator.bluetooth.requestDevice({
       filters: [{ name: "COMET5" }],
       optionalServices: ["974f9e8a-124d-43a8-8896-9a5ba15526be"],
     });
-    displayStatus5("Found device " + device.name + " with service");
+    displayStatus("Found device " + device.name + " with service");
 
     const server = await device.gatt.connect();
-    displayStatus5("Connected to GATT server");
+    displayStatus("Connected to GATT server");
 
-    const service = await server.getPrimaryService(SERVICE_UUID5);
-    displayStatus5("Connected to service " + SERVICE_UUID5);
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    displayStatus("Connected to service " + SERVICE_UUID);
 
     const characteristic = await service.getCharacteristic(
-      CHARACTERISTIC_UUID5
+      CHARACTERISTIC_UUID
     );
     setInterval(async () => {
       try {
         let readData = await characteristic.readValue();
 
-        let value = "";
+        let value = "'";
         if (readData.byteLength > 0) {
           for (let i = 0; i < readData.byteLength; i++) {
-            console.log("Tablet 5: " + readData.getUint8(i));
             if (readData.getUint8(i) == 255) {
-              value = value + ",";
+              value = value + "','";
+            } else if (readData.getUint8(i) == 253){
+              convert = true;
+            } else if (readData.getUint8(i) == 254){
+              convert = false;
             } else {
-              value = value + readData.getUint8(i);
+              if (convert == true) {
+                value = value + String.fromCharCode(readData.getUint8(i));
+              } else {
+                value = value + readData.getUint8(i);
+              }
             }
           }
-          if (value != lastValue5) {
-            lastValue5 = value;
-            displayStatus5(value);
+          value = value + "'";
+          if (value != lastValue) {
+            console.log("Tablet 5: " + value);
+            lastValue = value;
+            displayStatus(value);
+
+            con.connect(function (err) {
+              if (err) throw err;
+              console.log("Connected!");
+              var sql = `INSERT INTO match_data (matchNumber, tablet, teamnumber, scouter, timestamp, gamepiecepreload, automove, autogamepiecesaqquired, autoplacetr, autoplacemr, autoplacebr, autochargestation, automidline, telegamepiecesaqquired, teleplacetr, teleplacemr, teleplacebr, chargestation, playeddefense, wasdefended) VALUES (${value})`;
+              con.query(sql, function (err, result) {
+                if (err) throw err;
+                console.log("Tablet 5: Data inserted to database");
+              });
+            });
+          } else {
+            console.log("Tablet 5: Repeat");
           }
         }
       } catch (error) {
-        displayStatus5("Error: " + error);
+        displayStatus("Error: " + error);
       }
     }, 10000);
   } catch (error) {
-    displayStatus5("Error: " + error);
+    displayStatus("Error: " + error);
   }
 }

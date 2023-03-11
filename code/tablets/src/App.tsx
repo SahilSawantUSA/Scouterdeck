@@ -70,7 +70,12 @@ const App = () => {
     for (let i = 0; i < teamNumber.toString().length; i++) {
       if ((i + 1) % 2 == 0) {
         dataTeamNumber = dataTeamNumber + teamNumber.toString()[i];
-        outputData.push(parseInt(dataTeamNumber));
+        if (dataTeamNumber[0] == '0') {
+          outputData.push(0);
+          outputData.push(parseInt(dataTeamNumber));
+        } else {
+          outputData.push(parseInt(dataTeamNumber));
+        }
         dataTeamNumber = '';
       } else if (i == teamNumber.toString().length - 1) {
         dataTeamNumber = dataTeamNumber + teamNumber.toString()[i];
@@ -83,9 +88,11 @@ const App = () => {
     outputData.push(255);
 
     // Scouter Name
+    outputData.push(253);
     for (let i = 0; i < scouterName.length; i++) {
       outputData.push(scouterName.charCodeAt(i));
     }
+    outputData.push(254);
     outputData.push(255);
 
     // Time Stamp
@@ -484,6 +491,9 @@ const App = () => {
           justifyContent: 'center',
         }}>
         <Text>{gameMode ? ' TELEOP' : '  AUTON'}</Text>
+        <View style={styles.communityLabel}>
+          <Text>COMMUNITY</Text>
+        </View>
         <View style={styles.autoPlace}>
           <View style={styles.autoPlaceRow}>
             <Pressable
@@ -900,6 +910,9 @@ const App = () => {
           justifyContent: 'center',
         }}>
         <Text>{gameMode ? ' TELEOP' : '  AUTON'}</Text>
+        <View style={styles.communityLabel}>
+          <Text>COMMUNITY</Text>
+        </View>
         <View style={styles.teleopPlace}>
           <View style={styles.teleopPlaceRow}>
             <Pressable
@@ -1344,6 +1357,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  communityLabel: {
+    position: 'absolute',
+    left: 20,
+    top: 145,
+    transform: [{rotate: '-90deg'}],
   },
   autoPlace: {
     flexDirection: 'column',
