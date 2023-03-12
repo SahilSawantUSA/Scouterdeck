@@ -16,6 +16,7 @@ var con = mysql.createConnection({
   host: "localhost",
   user: "Scouter",
   password: "Data2Banner",
+  database: "2023_scouting",
 });
 
 con.connect(function (err) {
