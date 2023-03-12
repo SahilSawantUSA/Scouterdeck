@@ -18,6 +18,11 @@ var con = mysql.createConnection({
   password: "Data2Banner",
 });
 
+con.connect(function (err) {
+  if (err) throw err;
+  console.log("Connected!");
+});
+
 ipcRenderer.on('key', (event, arg) => {
   matchKey = arg;
 });
@@ -74,15 +79,11 @@ async function connect() {
             lastValue = value;
             displayStatus(value);
 
-            con.connect(function (err) {
-              if (err) throw err;
-              console.log("Connected!");
-              var sql = `INSERT INTO match_data (matchNumber, tablet, teamnumber, scouter, timestamp, gamepiecepreload, automove, autogamepiecesaqquired, autoplacetr, autoplacemr, autoplacebr, autochargestation, automidline, telegamepiecesaqquired, teleplacetr, teleplacemr, teleplacebr, chargestation, playeddefense, wasdefended) VALUES (${value})`;
+            var sql = `INSERT INTO match_data (matchNumber, tablet, teamnumber, scouter, timestamp, gamepiecepreload, automove, autogamepiecesaqquired, autoplacetr, autoplacemr, autoplacebr, autochargestation, automidline, telegamepiecesaqquired, teleplacetr, teleplacemr, teleplacebr, chargestation, playeddefense, wasdefended) VALUES (${value})`;
               con.query(sql, function (err, result) {
                 if (err) throw err;
                 console.log("Tablet 6: Data inserted to database");
               });
-            });
           } else {
             console.log("Tablet 6: Repeat");
           }
