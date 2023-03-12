@@ -57,7 +57,7 @@ async function connect() {
       try {
         let readData = await characteristic.readValue();
 
-        let value = "'" + matchKey;
+        let value = "'" + matchKey.substring(0, matchKey.length - 1) + "_qm";   // set up matchKey to format in the style of 2023mimus_qm69 - "69", the match number, will add first thing in the loop below
         if (readData.byteLength > 0) {
           for (let i = 0; i < readData.byteLength; i++) {
             if (readData.getUint8(i) == 255) {
